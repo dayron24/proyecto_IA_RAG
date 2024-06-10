@@ -1,7 +1,24 @@
 from transformers import pipeline
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 import csv
+
+class CustomHuggingFaceLLM:
+    def init(self, pipe):
+        self.pipe = pipe
+
+    def call(self, inputs):
+        response = self.pipe(inputs["question"], max_length=50)
+        return {"text": response[0]["generated_text"]}
+
+class CustomSequentialChain:
+    def init(self, prompt, llm):
+        self.prompt = prompt
+        self.llm = llm
+
+    def call(self, inputs):
+        prompt_text = self.prompt.format(question=inputs["question"])
+        response = self.llm({"question": prompt_text})
+        return response
 
 def format_output(question, rag_result, llm_result):
     output = f"Question: {question}\n\n"
@@ -12,28 +29,17 @@ def format_output(question, rag_result, llm_result):
     output += "-" * 50 + "\n"
     return output
 
-def create_chain(pipe): 
+def create_chain(pipe):
     template = """
         Question: {question}
         Helpful Answer:"""
     QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
-    
-    class HuggingFacePipelineLLM:
-        def __init__(self, pipe):
-            self.pipe = pipe
 
-        def __call__(self, inputs):
-            response = self.pipe(inputs["question"])
-            return {"text": response[0]["generated_text"]}
+    hf_llm = CustomHuggingFaceLLM(pipe)
 
-    hf_llm = HuggingFacePipelineLLM(pipe)
-    
-    return LLMChain(
-        llm=hf_llm, 
-        prompt=QA_CHAIN_PROMPT
-    )
+    return CustomSequentialChain(QA_CHAIN_PROMPT, hf_llm)
 
-if __name__ == '__main__':
+if name == 'main':
     from RagApi import RagApi  # Asumimos que RagApi está configurado correctamente
     ra = RagApi(load_vectorstore=True)  # change this line to build from scratch
 
