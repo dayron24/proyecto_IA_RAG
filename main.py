@@ -1,10 +1,6 @@
-#Cambiar el RagApi dependiendo de cual se quiera usar
-#from RagApi import RagApi 
-from RagOllama import RagApi
-#_____________________________________
+from RagApi import RagApi
 from langchain.prompts import PromptTemplate
 from langchain_community.llms import Ollama  
-from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 import csv
 

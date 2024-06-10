@@ -1,8 +1,6 @@
 import os
 import sys 
-import openai 
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_openai import OpenAI 
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -17,13 +15,11 @@ from langchain_community.llms import Ollama
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..')) # Add parent directory to path variable
 load_dotenv(find_dotenv()) # Load .env file
-openai.api_key = os.getenv('OPENAI_API_KEY') # Set OpenAI API key
 
 class RagApi: 
     def __init__(self, docs_dir='docs', db_dir='chroma', load_vectorstore=False):
         self.docs_dir = docs_dir
         # TODO: maybe change this line to use llama 3 embeddings
-        #embeddings = OpenAIEmbeddings() # change this line to use ollama
         #OLLAMA
         embeddings =OllamaEmbeddings(
             model="llama3:8b",
@@ -39,7 +35,9 @@ class RagApi:
             self.vecdb = self.create_db(chunks, embeddings, db_dir) # create vectorstore
 
         self.retriever = self.create_retriever()
-        self.llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0) # TODO: change answering model to llama
+        self.llm = Ollama(
+            model="llama3:8b"
+        )  
         self.chain = self.create_chain() 
 
     def create_chain(self): 
@@ -57,7 +55,6 @@ class RagApi:
 
     def create_retriever(self):
         # TODO: maybe change this line to use llama as the llm 
-        #llm = OpenAI(temperature=0, model="gpt-3.5-turbo-instruct") # LLM in charge of compressing the document, can be changed to ollama
         llm = Ollama(
             model="llama3:8b"
         ) 
